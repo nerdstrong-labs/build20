@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Build20</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface2: #242424;
+      --accent: #e8ff00;
+      --accent2: #00d4ff;
+      --text: #f0f0f0;
+      --text-muted: #777;
+      --border: #2c2c2c;
+      --success: #4ade80;
+      --danger: #f87171;
+      --nav-h: 68px;
+      --r: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      padding-bottom: var(--nav-h);
+    }
+
+    /* ── SCREENS ── */
+    .screen { display: none; padding: 20px 16px 8px; }
+    .screen.active { display: block; }
+
+    /* ── NAV ── */
+    #nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 100%; max-width: 480px; height: var(--nav-h);
+      background: var(--surface); border-top: 1px solid var(--border);
+      display: flex; z-index: 100;
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; gap: 3px; border: none; background: none;
+      color: var(--text-muted); font-size: 9px; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer;
+    }
+    .nav-btn .ni { font-size: 21px; }
+    .nav-btn.active { color: var(--accent); }
+
+    /* ── TYPOGRAPHY ── */
+    .screen-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px;
+    }
+    .logo { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; }
+    .logo .acc { color: var(--accent); }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px; margin-bottom: 12px;
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; border: none; font-weight: 700; cursor: pointer;
+      transition: opacity .15s, transform .1s; border-radius: 10px;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary {
+      background: var(--accent); color: #000; width: 100%;
+      padding: 15px; font-size: 15px; border-radius: var(--r);
+    }
+    .btn-secondary {
+      background: var(--surface2); color: var(--text);
+      border: 1px solid var(--border); padding: 11px 18px; font-size: 13px;
+    }
+    .btn-danger {
+      background: rgba(248,113,113,.12); color: var(--danger);
+      border: 1px solid rgba(248,113,113,.25); padding: 11px 18px; font-size: 13px;
+    }
+    .btn-ghost { background: none; color: var(--accent); padding: 8px 12px; font-size: 13px; }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: 8px 14px; font-size: 12px; border-radius: 8px; }
+
+    /* ── INPUTS ── */
+    input[type=text], input[type=number] {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-size: 14px;
+      padding: 10px 12px; outline: none; width: 100%;
+      transition: border-color .15s;
+    }
+    input:focus { border-color: var(--accent); }
+    input[type=number] { text-align: center; font-size: 17px; font-weight: 700; }
+
+    /* ════════════════════════════════
+       SETUP SCREEN
+    ════════════════════════════════ */
+    #screen-setup { padding-top: 40px; }
+
+    .setup-hero { text-align: center; margin-bottom: 36px; }
+    .setup-big-logo { font-size: 52px; font-weight: 900; letter-spacing: -0.03em; }
+    .setup-big-logo .acc { color: var(--accent); }
+    .setup-sub { color: var(--text-muted); font-size: 14px; margin-top: 6px; line-height: 1.5; }
+
+    .setup-choice-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+    .choice-card {
+      padding: 20px 12px; border-radius: var(--r);
+      border: 2px solid var(--border); background: var(--surface);
+      cursor: pointer; text-align: center; transition: border-color .15s, background .15s;
+    }
+    .choice-card.selected { border-color: var(--accent); background: rgba(232,255,0,.05); }
+    .choice-card .cc-icon { font-size: 30px; margin-bottom: 8px; }
+    .choice-card .cc-title { font-size: 13px; font-weight: 700; }
+    .choice-card .cc-desc { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+
+    .movement-list-section { margin-bottom: 24px; }
+    .movement-list-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 12px;
+    }
+    .movement-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .movement-num {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--surface2); display: flex; align-items: center;
+      justify-content: center; font-size: 11px; font-weight: 700;
+      color: var(--text-muted); flex-shrink: 0;
+    }
+    .movement-preset-label { font-size: 15px; font-weight: 600; flex: 1; }
+    .movement-row input { flex: 1; }
+
+    /* ════════════════════════════════
+       WORKOUT SCREEN
+    ════════════════════════════════ */
+    .timer-block { text-align: center; margin-bottom: 24px; }
+    .timer-time {
+      font-size: 72px; font-weight: 900; letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums; line-height: 1;
+      color: var(--text-muted); transition: color .3s;
+    }
+    .timer-time.running { color: var(--accent); }
+    .timer-time.done { color: var(--danger); }
+    .timer-label { font-size: 11px; color: var(--text-muted); letter-spacing: .1em; text-transform: uppercase; margin-top: 6px; }
+    .timer-ctrls { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+    .timer-btn {
+      padding: 10px 26px; border-radius: 50px; border: none;
+      font-size: 14px; font-weight: 700; cursor: pointer;
+    }
+    .timer-play { background: var(--accent); color: #000; }
+    .timer-reset { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+    .mov-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 10px; overflow: hidden; }
+    .mov-card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 14px 8px;
+    }
+    .mov-card-name { font-size: 15px; font-weight: 700; }
+    .mov-set-badge {
+      font-size: 11px; font-weight: 700; background: var(--surface2);
+      padding: 3px 9px; border-radius: 50px; color: var(--text-muted);
+    }
+    .sets-wrap { padding: 0 14px 6px; }
+    .set-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 0; border-bottom: 1px solid var(--border);
+    }
+    .set-row:last-child { border-bottom: none; }
+    .set-lbl { font-size: 11px; font-weight: 700; color: var(--text-muted); width: 36px; flex-shrink: 0; }
+    .set-fields { display: flex; gap: 8px; flex: 1; }
+    .set-field { flex: 1; }
+    .set-field-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; text-align: center; margin-bottom: 2px; }
+    .set-field input { padding: 7px 4px; font-size: 16px; }
+    .set-del { background: none; border: none; color: var(--text-muted); font-size: 17px; cursor: pointer; padding: 4px; line-height: 1; }
+    .mov-card-footer {
+      display: flex; border-top: 1px solid var(--border);
+    }
+    .mov-footer-btn {
+      flex: 1; padding: 11px 6px; background: none; border: none;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      letter-spacing: .06em; text-transform: uppercase;
+      transition: background .15s;
+    }
+    .mov-footer-btn:hover { background: rgba(255,255,255,.03); }
+    .mov-footer-btn + .mov-footer-btn { border-left: 1px solid var(--border); }
+    .see-prog-btn { color: var(--accent2); }
+    .add-set-btn  { color: var(--accent); }
+    .finish-bar { padding: 16px 0 4px; }
+
+    /* ════════════════════════════════
+       HISTORY SCREEN
+    ════════════════════════════════ */
+    .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 10px; overflow: hidden; }
+    .history-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; cursor: pointer;
+    }
+    .history-date { font-size: 15px; font-weight: 700; }
+    .history-meta { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .history-chevron { font-size: 18px; color: var(--text-muted); transition: transform .2s; }
+    .history-chevron.open { transform: rotate(180deg); }
+    .history-body { display: none; border-top: 1px solid var(--border); padding: 8px 16px 14px; }
+    .history-body.open { display: block; }
+    .h-mov-row {
+      display: flex; justify-content: space-between; align-items: baseline;
+      padding: 7px 0; border-bottom: 1px solid var(--border); font-size: 13px;
+    }
+    .h-mov-row:last-child { border-bottom: none; }
+    .h-mov-name { font-weight: 600; }
+    .h-mov-sets { color: var(--text-muted); text-align: right; font-size: 12px; }
+
+    /* ════════════════════════════════
+       PROGRESS SCREEN
+    ════════════════════════════════ */
+    .chips {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 8px;
+      margin-bottom: 16px; scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 7px 14px; border-radius: 50px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text-muted); font-size: 12px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    .chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
+
+    .chart-toggle { display: flex; gap: 4px; margin-bottom: 14px; }
+    .ct-btn {
+      flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface); color: var(--text-muted);
+      font-size: 12px; font-weight: 700; cursor: pointer;
+    }
+    .ct-btn.active { background: var(--surface2); color: var(--text); border-color: #555; }
+
+    .chart-wrap {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 16px; margin-bottom: 12px;
+    }
+    .progress-cat-section { margin-bottom: 28px; }
+    .progress-cat-header {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .progress-cat-icon { font-size: 18px; }
+    .progress-cat-title {
+      font-size: 13px; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; color: var(--text);
+    }
+
+    /* ════════════════════════════════
+       MASTERY SCREEN
+    ════════════════════════════════ */
+    .mastery-group { margin-bottom: 24px; }
+    .mastery-group-title {
+      font-size: 11px; font-weight: 700; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px;
+    }
+    .ach-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px 15px; margin-bottom: 8px;
+    }
+    .ach-card.unlocked { border-color: rgba(232,255,0,.4); background: rgba(232,255,0,.04); }
+    .ach-top { display: flex; gap: 12px; margin-bottom: 10px; }
+    .ach-icon { font-size: 26px; flex-shrink: 0; line-height: 1.2; }
+    .ach-info { flex: 1; }
+    .ach-name { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+    .ach-desc { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+    .ach-badge {
+      font-size: 10px; font-weight: 700; letter-spacing: .05em;
+      text-transform: uppercase; flex-shrink: 0;
+    }
+    .ach-badge.done { color: var(--accent); }
+    .ach-badge.todo { color: var(--text-muted); }
+
+    .prog-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 3px; transition: width .6s ease; }
+    .prog-fill.done { background: var(--accent); }
+    .prog-fill.going { background: var(--accent2); }
+    .prog-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+    /* ════════════════════════════════
+       PRs SCREEN
+    ════════════════════════════════ */
+    .pr-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .pr-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 14px 14px 12px;
+    }
+    .pr-icon { font-size: 20px; margin-bottom: 6px; }
+    .pr-name { font-size: 13px; font-weight: 700; margin-bottom: 10px; line-height: 1.3; }
+    .pr-stats { display: flex; flex-direction: column; gap: 8px; }
+    .pr-stat { display: flex; align-items: baseline; justify-content: space-between; }
+    .pr-val { font-size: 20px; font-weight: 900; line-height: 1; }
+    .pr-lbl { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; }
+    .pr-weight .pr-val { color: var(--accent); }
+    .pr-reps .pr-val { color: var(--accent2); }
+    .pr-sep { height: 1px; background: var(--border); margin: 2px 0; }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; top: 16px; left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: 11px 20px;
+      font-size: 14px; font-weight: 600; z-index: 300;
+      transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      white-space: nowrap; max-width: calc(100vw - 32px);
+      text-align: center;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.ach { border-color: var(--accent); color: var(--accent); }
+
+    /* ── EMPTY STATE ── */
+    .empty { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty .ei { font-size: 46px; margin-bottom: 12px; }
+    .empty p { font-size: 14px; line-height: 1.5; }
+
+    /* ── END SESSION BUTTON ── */
+    .btn-end-session {
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: 12px; font-weight: 700;
+      letter-spacing: 0.04em; padding: 4px 0;
+      transition: color .15s;
+    }
+    .btn-end-session:hover { color: var(--danger); }
+
+    /* ── UTILS ── */
+    .row { display: flex; align-items: center; justify-content: space-between; }
+    .mb8 { margin-bottom: 8px; }
+    .mb16 { margin-bottom: 16px; }
+    .mt8 { margin-top: 8px; }
+    .mt16 { margin-top: 16px; }
+    .muted { color: var(--text-muted); }
+    .accent { color: var(--accent); }
+    .fs12 { font-size: 12px; }
+    .fw7 { font-weight: 700; }
+
+    /* settings link */
+    .settings-link {
+      font-size: 12px; color: var(--text-muted); text-align: center;
+      margin-top: 12px; cursor: pointer; text-decoration: underline;
+    }
+    .reset-section { margin-top: 32px; padding-top: 20px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════
+     SETUP SCREEN
+══════════════════════════════════ -->
+<div id="screen-setup" class="screen active">
+  <div id="setup-back-bar" style="display:none; margin-bottom:16px;">
+    <button class="btn-end-session" onclick="cancelChangeMovements()">← Back</button>
+  </div>
+  <div class="setup-hero">
+    <div class="setup-big-logo">Build<span class="acc">20</span></div>
+    <p class="setup-sub" id="setup-sub-text">20 minutes. 7 movements.<br>Track every rep, every set.</p>
+  </div>
+
+  <div class="setup-choice-grid">
+    <div class="choice-card selected" id="choice-preset" onclick="selectMovementChoice('preset')">
+      <div class="cc-icon">🏋️</div>
+      <div class="cc-title">Build20 Defaults</div>
+      <div class="cc-desc">Our 6 proven movements + your 7th pick</div>
+    </div>
+    <div class="choice-card" id="choice-custom" onclick="selectMovementChoice('custom')">
+      <div class="cc-icon">✏️</div>
+      <div class="cc-title">Custom</div>
+      <div class="cc-desc">Name all 7 movements yourself</div>
+    </div>
+  </div>
+
+  <div class="movement-list-section">
+    <div class="movement-list-title">Your 7 Movements</div>
+    <div id="movement-inputs"></div>
+  </div>
+
+  <button class="btn btn-primary" id="setup-save-btn" onclick="saveSetup()">Save &amp; Start Training</button>
+</div>
+
+<!-- ══════════════════════════════════
+     WORKOUT SCREEN
+══════════════════════════════════ -->
+<div id="screen-workout" class="screen">
+  <div class="row mb16">
+    <span class="screen-label">Today's Session</span>
+    <button class="btn-end-session" onclick="abandonSession()">End Session ✕</button>
+  </div>
+
+  <div class="timer-block">
+    <div class="timer-time" id="timer-display">20:00</div>
+    <div class="timer-label" id="timer-label">Ready</div>
+    <div class="timer-ctrls">
+      <button class="timer-btn timer-play" id="timer-toggle-btn" onclick="timerToggle()">▶ Start</button>
+      <button class="timer-btn timer-reset" onclick="timerReset()">↺ Reset</button>
+    </div>
+  </div>
+
+  <div id="workout-movements"></div>
+
+  <div class="finish-bar">
+    <button class="btn btn-primary" onclick="finishWorkout()">🏁 Finish Workout</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     HISTORY SCREEN
+══════════════════════════════════ -->
+<div id="screen-history" class="screen">
+  <div class="screen-label">History</div>
+  <div id="history-list"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     PROGRESS SCREEN
+══════════════════════════════════ -->
+<div id="screen-progress" class="screen">
+  <div class="row mb16">
+    <span class="screen-label">Progress</span>
+  </div>
+  <div class="chart-toggle mb16" id="chart-mode-toggle">
+    <button class="ct-btn active" data-mode="both"   onclick="setChartMode('both')">Both</button>
+    <button class="ct-btn"        data-mode="weight" onclick="setChartMode('weight')">Weight</button>
+    <button class="ct-btn"        data-mode="reps"   onclick="setChartMode('reps')">Reps</button>
+  </div>
+  <div id="progress-categories"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     MASTERY SCREEN
+══════════════════════════════════ -->
+<div id="screen-mastery" class="screen">
+  <div class="screen-label">Mastery &amp; Milestones</div>
+  <div id="mastery-list"></div>
+</div>
+
+<!-- ══════════════════════════════════
+     PRs SCREEN
+══════════════════════════════════ -->
+<div id="screen-prs" class="screen">
+  <div class="row mb16">
+    <span class="screen-label">Personal Records</span>
+  </div>
+  <div id="prs-list"></div>
+
+  <div class="reset-section">
+    <button class="btn btn-secondary btn-full mb8" onclick="changeMovements()">✏️ Change Movements</button>
+    <p class="muted fs12" style="text-align:center">Updates your 7 movements. Existing sessions keep their original movement names.</p>
+    <div style="height:16px"></div>
+    <button class="btn btn-danger btn-full" onclick="confirmReset()">⚙ Reset All Data</button>
+    <p class="muted fs12 mt8" style="text-align:center">Clears all workouts, movements, and records.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     BOTTOM NAV (hidden during setup)
+══════════════════════════════════ -->
+<nav id="nav" style="display:none">
+  <button class="nav-btn active" data-screen="workout" onclick="navTo('workout')">
+    <span class="ni">🏋️</span>Workout
+  </button>
+  <button class="nav-btn" data-screen="history" onclick="navTo('history')">
+    <span class="ni">📋</span>History
+  </button>
+  <button class="nav-btn" data-screen="progress" onclick="navTo('progress')">
+    <span class="ni">📈</span>Progress
+  </button>
+  <button class="nav-btn" data-screen="mastery" onclick="navTo('mastery')">
+    <span class="ni">🏆</span>Mastery
+  </button>
+  <button class="nav-btn" data-screen="prs" onclick="navTo('prs')">
+    <span class="ni">⭐</span>PRs
+  </button>
+</nav>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════
+   STORAGE
+══════════════════════════════════════════ */
+const KEY_MOV  = 'b20_movements';
+const KEY_SESS = 'b20_sessions';
+const KEY_UNL  = 'b20_unlocked';
+
+const store = {
+  getMovements : ()  => JSON.parse(localStorage.getItem(KEY_MOV)  || 'null'),
+  setMovements : (v) => localStorage.setItem(KEY_MOV,  JSON.stringify(v)),
+  getSessions  : ()  => JSON.parse(localStorage.getItem(KEY_SESS) || '[]'),
+  addSession   : (s) => {
+    const arr = store.getSessions();
+    arr.push(s);
+    localStorage.setItem(KEY_SESS, JSON.stringify(arr));
+  },
+  getUnlocked  : ()  => JSON.parse(localStorage.getItem(KEY_UNL) || '[]'),
+  unlock       : (id) => {
+    const arr = store.getUnlocked();
+    if (!arr.includes(id)) { arr.push(id); localStorage.setItem(KEY_UNL, JSON.stringify(arr)); }
+  },
+  clearAll     : () => { localStorage.removeItem(KEY_MOV); localStorage.removeItem(KEY_SESS); localStorage.removeItem(KEY_UNL); }
+};
+
+/* ══════════════════════════════════════════
+   ACHIEVEMENTS DEFINITIONS
+══════════════════════════════════════════ */
+/*
+  Types:
+    total_sessions          — total session count >= target
+    all_sets_min_reps       — every set of movement in a single session has >= target reps
+    total_reps_in_session   — sum of all reps for movement in a single session >= target
+    max_weight_in_set       — highest single-set weight ever for movement >= target
+    min_sets_in_session     — movement has >= target sets in a single session
+    max_reps_in_set         — highest single-set reps ever for movement >= target
+*/
+const ACHIEVEMENTS = [
+  // ── MILESTONES ──
+  { id:'s1',  cat:'Milestones', icon:'🏁', name:'Day One',          desc:'Complete your first Build20 workout', type:'total_sessions', target:1  },
+  { id:'s7',  cat:'Milestones', icon:'📅', name:'Week Warrior',     desc:'Complete 7 workouts',                 type:'total_sessions', target:7  },
+  { id:'s20', cat:'Milestones', icon:'🏆', name:'Build20 Complete', desc:'Complete 20 workouts',                type:'total_sessions', target:20 },
+  { id:'s50', cat:'Milestones', icon:'💎', name:'Half Century',     desc:'Complete 50 workouts',                type:'total_sessions', target:50 },
+];
+
+/* Progress calculator: returns { current, pct, unlocked } */
+function calcProgress(ach, sessions) {
+  const movSessions = ach.movement
+    ? sessions.map(s => ({
+        ...s,
+        entry: (s.entries || []).find(e => e.movement === ach.movement)
+      })).filter(s => s.entry)
+    : sessions;
+
+  let current = 0;
+
+  switch (ach.type) {
+    case 'total_sessions':
+      current = sessions.length;
+      break;
+
+    case 'all_sets_min_reps': {
+      // Best "minimum reps in any set" across all sessions for this movement
+      let best = 0;
+      for (const s of movSessions) {
+        const sets = s.entry.sets.filter(x => x.reps > 0);
+        if (!sets.length) continue;
+        const minReps = Math.min(...sets.map(x => x.reps));
+        if (minReps > best) best = minReps;
+      }
+      current = best;
+      break;
+    }
+
+    case 'total_reps_in_session': {
+      let best = 0;
+      for (const s of movSessions) {
+        const total = s.entry.sets.reduce((a, x) => a + (x.reps || 0), 0);
+        if (total > best) best = total;
+      }
+      current = best;
+      break;
+    }
+
+    case 'max_weight_in_set': {
+      let best = 0;
+      for (const s of movSessions) {
+        for (const set of s.entry.sets) {
+          if ((set.weight || 0) > best) best = set.weight;
+        }
+      }
+      current = best;
+      break;
+    }
+
+    case 'min_sets_in_session': {
+      let best = 0;
+      for (const s of movSessions) {
+        const cnt = s.entry.sets.filter(x => x.reps > 0).length;
+        if (cnt > best) best = cnt;
+      }
+      current = best;
+      break;
+    }
+
+    case 'max_reps_in_set': {
+      let best = 0;
+      for (const s of movSessions) {
+        for (const set of s.entry.sets) {
+          if ((set.reps || 0) > best) best = set.reps;
+        }
+      }
+      current = best;
+      break;
+    }
+  }
+
+  const pct = Math.min(1, current / ach.target);
+  return { current, pct, unlocked: current >= ach.target };
+}
+
+/* ══════════════════════════════════════════
+   APP STATE
+══════════════════════════════════════════ */
+const state = {
+  screen: 'setup',
+  movChoice: 'preset',         // 'preset' | 'custom'
+  movements: [],               // string[7]
+  workout: {},                 // { movName: [{reps, weight}] }
+  timer: { remaining: 1200, running: false, interval: null },
+  progressMovSel: {},          // { category: selectedMovName }
+  progressCharts: {},          // { category: Chart instance }
+  chartMode: 'both',           // 'both' | 'weight' | 'reps'
+  changingMovements: false,    // true when re-entering setup to update movements only
+};
+
+const PRESET_MOVEMENTS = ['Pushup','Shoulder Press','Row','Squat','Curl','Deadlift'];
+
+const MOVEMENT_CATEGORIES = {
+  'Pushup':         'Upper Body',
+  'Shoulder Press': 'Upper Body',
+  'Row':            'Upper Body',
+  'Curl':           'Upper Body',
+  'Squat':          'Lower Body',
+  'Deadlift':       'Lower Body',
+  // anything else → 'Added'
+};
+const CATEGORY_ORDER = ['Upper Body', 'Lower Body', 'Added'];
+const CATEGORY_ICONS = { 'Upper Body':'💪', 'Lower Body':'🦵', 'Added':'➕' };
+
+function getMovCategory(mov) {
+  return MOVEMENT_CATEGORIES[mov] || 'Added';
+}
+
+function goToMovProgress(mov) {
+  const cat = getMovCategory(mov);
+  state.progressMovSel[cat] = mov;
+  navTo('progress');
+  // After render, scroll the relevant category into view
+  setTimeout(() => {
+    const catId = cat.toLowerCase().replace(/ /g,'-');
+    const el = document.getElementById(`progress-cat-${catId}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 80);
+}
+
+/* ══════════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════════ */
+function selectMovementChoice(choice) {
+  state.movChoice = choice;
+  document.getElementById('choice-preset').classList.toggle('selected', choice === 'preset');
+  document.getElementById('choice-custom').classList.toggle('selected', choice === 'custom');
+  renderMovementInputs();
+}
+
+function renderMovementInputs() {
+  const el = document.getElementById('movement-inputs');
+  el.innerHTML = '';
+  if (state.movChoice === 'preset') {
+    for (let i = 0; i < 7; i++) {
+      const row = document.createElement('div');
+      row.className = 'movement-row';
+      if (i < 6) {
+        row.innerHTML = `
+          <div class="movement-num">${i+1}</div>
+          <div class="movement-preset-label">${PRESET_MOVEMENTS[i]}</div>`;
+      } else {
+        row.innerHTML = `
+          <div class="movement-num">7</div>
+          <input type="text" id="custom-7th" placeholder="Your 7th movement…" maxlength="30">`;
+      }
+      el.appendChild(row);
+    }
+  } else {
+    for (let i = 0; i < 7; i++) {
+      const row = document.createElement('div');
+      row.className = 'movement-row';
+      row.innerHTML = `
+        <div class="movement-num">${i+1}</div>
+        <input type="text" id="custom-mov-${i}" placeholder="Movement ${i+1}…" maxlength="30">`;
+      el.appendChild(row);
+    }
+  }
+}
+
+function saveSetup() {
+  let movements = [];
+  if (state.movChoice === 'preset') {
+    const seventh = document.getElementById('custom-7th');
+    const val = seventh ? seventh.value.trim() : '';
+    if (!val) { showToast('Enter your 7th movement to continue'); return; }
+    movements = [...PRESET_MOVEMENTS, val];
+  } else {
+    for (let i = 0; i < 7; i++) {
+      const v = (document.getElementById(`custom-mov-${i}`)?.value || '').trim();
+      if (!v) { showToast(`Enter a name for movement ${i+1}`); return; }
+      movements.push(v);
+    }
+  }
+  store.setMovements(movements);
+  state.movements = movements;
+
+  if (state.changingMovements) {
+    state.changingMovements = false;
+    resetSetupUI();
+    // Reset workout and progress state so stale keys don't linger
+    Object.values(state.progressCharts||{}).forEach(c => { try { c.destroy(); } catch(e){} });
+    state.workout = {};
+    state.progressMovSel = {};
+    state.progressCharts = {};
+    document.getElementById('nav').style.display = 'flex';
+    navTo('workout');
+    showToast('Movements updated.');
+  } else {
+    launchApp();
+  }
+}
+
+/* ══════════════════════════════════════════
+   APP LAUNCH
+══════════════════════════════════════════ */
+function launchApp() {
+  state.movements = store.getMovements();
+  document.getElementById('nav').style.display = 'flex';
+  navTo('workout');
+  checkNewUnlocks();
+}
+
+function navTo(screenName) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(`screen-${screenName}`).classList.add('active');
+  document.querySelector(`.nav-btn[data-screen="${screenName}"]`)?.classList.add('active');
+  state.screen = screenName;
+
+  if (screenName === 'workout')  renderWorkout();
+  if (screenName === 'history')  renderHistory();
+  if (screenName === 'progress') renderProgress();
+  if (screenName === 'mastery')  renderMastery();
+  if (screenName === 'prs')      renderPRs();
+}
+
+/* ══════════════════════════════════════════
+   TIMER
+══════════════════════════════════════════ */
+function timerToggle() {
+  if (state.timer.running) {
+    clearInterval(state.timer.interval);
+    state.timer.running = false;
+    updateTimerUI();
+  } else {
+    if (state.timer.remaining <= 0) return;
+    state.timer.running = true;
+    state.timer.interval = setInterval(() => {
+      state.timer.remaining--;
+      if (state.timer.remaining <= 0) {
+        state.timer.remaining = 0;
+        state.timer.running = false;
+        clearInterval(state.timer.interval);
+        playBeep();
+      }
+      updateTimerUI();
+    }, 1000);
+    updateTimerUI();
+  }
+}
+
+function timerReset() {
+  clearInterval(state.timer.interval);
+  state.timer.running = false;
+  state.timer.remaining = 1200;
+  updateTimerUI();
+}
+
+function updateTimerUI() {
+  const el = document.getElementById('timer-display');
+  const lbl = document.getElementById('timer-label');
+  const btn = document.getElementById('timer-toggle-btn');
+  if (!el) return;
+  const m = Math.floor(state.timer.remaining / 60);
+  const s = state.timer.remaining % 60;
+  el.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.className = 'timer-time' + (state.timer.remaining === 0 ? ' done' : state.timer.running ? ' running' : '');
+  lbl.textContent = state.timer.remaining === 0 ? "Time's Up!" : state.timer.running ? 'Running' : 'Paused';
+  btn.textContent = state.timer.running ? '⏸ Pause' : (state.timer.remaining < 1200 ? '▶ Resume' : '▶ Start');
+}
+
+function playBeep() {
+  try {
+    const ctx = new AudioContext();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.4, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    osc.start(); osc.stop(ctx.currentTime + 0.8);
+  } catch(e) {}
+}
+
+/* ══════════════════════════════════════════
+   WORKOUT SCREEN
+══════════════════════════════════════════ */
+function renderWorkout() {
+  // Init workout entries for any movement not yet started
+  state.movements.forEach(m => {
+    if (!state.workout[m]) state.workout[m] = [];
+  });
+  updateTimerUI();
+  renderMovementCards();
+}
+
+function renderMovementCards() {
+  const el = document.getElementById('workout-movements');
+  if (!el) return;
+  el.innerHTML = '';
+  state.movements.forEach(mov => renderMovCard(el, mov));
+}
+
+function renderMovCard(container, mov) {
+  const sets = state.workout[mov] || [];
+  const card = document.createElement('div');
+  card.className = 'mov-card';
+  card.id = `card-${movId(mov)}`;
+
+  const setCount = sets.filter(s => s.reps > 0).length;
+  let setsHtml = '';
+  sets.forEach((s, i) => {
+    setsHtml += `
+      <div class="set-row">
+        <div class="set-lbl">Set ${i+1}</div>
+        <div class="set-fields">
+          <div class="set-field">
+            <div class="set-field-lbl">Reps</div>
+            <input type="number" min="0" step="1" value="${s.reps||''}"
+              placeholder="0"
+              oninput="updateSet('${esc(mov)}',${i},'reps',this.value)"
+              inputmode="numeric">
+          </div>
+          <div class="set-field">
+            <div class="set-field-lbl">Weight (lbs)</div>
+            <input type="number" min="0" step="2.5" value="${s.weight||''}"
+              placeholder="BW"
+              oninput="updateSet('${esc(mov)}',${i},'weight',this.value)"
+              inputmode="decimal">
+          </div>
+        </div>
+        <button class="set-del" onclick="deleteSet('${esc(mov)}',${i})" title="Remove set">×</button>
+      </div>`;
+  });
+
+  card.innerHTML = `
+    <div class="mov-card-head">
+      <div class="mov-card-name">${mov}</div>
+      <div class="mov-set-badge">${setCount} set${setCount!==1?'s':''}</div>
+    </div>
+    <div class="sets-wrap">${setsHtml}</div>
+    <div class="mov-card-footer">
+      <button class="mov-footer-btn see-prog-btn" onclick="goToMovProgress('${esc(mov)}')">📈 See Progress</button>
+      <button class="mov-footer-btn add-set-btn"  onclick="addSet('${esc(mov)}')">+ Add Set</button>
+    </div>`;
+
+  container.appendChild(card);
+}
+
+function movId(mov) { return mov.replace(/[^a-zA-Z0-9]/g,'_'); }
+function esc(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+
+function addSet(mov) {
+  if (!state.workout[mov]) state.workout[mov] = [];
+  state.workout[mov].push({ reps: 0, weight: 0 });
+  renderMovementCards();
+}
+
+function deleteSet(mov, idx) {
+  state.workout[mov].splice(idx, 1);
+  renderMovementCards();
+}
+
+function updateSet(mov, idx, field, val) {
+  if (!state.workout[mov]) return;
+  state.workout[mov][idx][field] = parseFloat(val) || 0;
+  // Update badge without full re-render
+  const setCount = state.workout[mov].filter(s => s.reps > 0).length;
+  const badge = document.querySelector(`#card-${movId(mov)} .mov-set-badge`);
+  if (badge) badge.textContent = `${setCount} set${setCount!==1?'s':''}`;
+}
+
+function finishWorkout() {
+  const entries = state.movements.map(mov => ({
+    movement: mov,
+    sets: (state.workout[mov] || []).filter(s => s.reps > 0 || s.weight > 0)
+  })).filter(e => e.sets.length > 0);
+
+  if (!entries.length) {
+    showToast('Log at least one set to finish');
+    return;
+  }
+
+  const session = {
+    id: Date.now().toString(),
+    date: new Date().toISOString(),
+    entries
+  };
+  store.addSession(session);
+
+  // Reset workout
+  state.movements.forEach(m => { state.workout[m] = []; });
+  timerReset();
+
+  const newlyUnlocked = checkNewUnlocks();
+  if (newlyUnlocked.length) {
+    setTimeout(() => showToast(`🏆 Achievement unlocked: ${newlyUnlocked[0].name}`, true), 800);
+  } else {
+    showToast('Workout saved!');
+  }
+  navTo('history');
+}
+
+/* ══════════════════════════════════════════
+   HISTORY SCREEN
+══════════════════════════════════════════ */
+function renderHistory() {
+  const el = document.getElementById('history-list');
+  const sessions = store.getSessions().slice().reverse();
+  if (!sessions.length) {
+    el.innerHTML = `<div class="empty"><div class="ei">📋</div><p>No workouts yet.<br>Finish a session to see your history.</p></div>`;
+    return;
+  }
+  el.innerHTML = sessions.map((s, i) => {
+    const d = new Date(s.date);
+    const dateStr = d.toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric', year:'numeric' });
+    const totalSets = s.entries.reduce((a,e) => a + e.sets.length, 0);
+    const totalReps = s.entries.reduce((a,e) => a + e.sets.reduce((b,st) => b + (st.reps||0), 0), 0);
+
+    const movRows = s.entries.map(e => {
+      const setDetails = e.sets.map((st,si) => {
+        const w = st.weight ? ` × ${st.weight}lbs` : '';
+        return `Set ${si+1}: ${st.reps} reps${w}`;
+      }).join('<br>');
+      return `<div class="h-mov-row">
+        <div class="h-mov-name">${e.movement}</div>
+        <div class="h-mov-sets">${setDetails}</div>
+      </div>`;
+    }).join('');
+
+    return `
+      <div class="history-item">
+        <div class="history-head" onclick="toggleHistory(${i})">
+          <div>
+            <div class="history-date">${dateStr}</div>
+            <div class="history-meta">${totalSets} sets · ${totalReps} reps</div>
+          </div>
+          <div class="history-chevron" id="chevron-${i}">▾</div>
+        </div>
+        <div class="history-body" id="hbody-${i}">
+          ${movRows}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleHistory(i) {
+  const body = document.getElementById(`hbody-${i}`);
+  const chev = document.getElementById(`chevron-${i}`);
+  body.classList.toggle('open');
+  chev.classList.toggle('open');
+}
+
+/* ══════════════════════════════════════════
+   PROGRESS SCREEN
+══════════════════════════════════════════ */
+const MIN_SESSIONS_FOR_CHART = 3;
+
+function renderProgress() {
+  const movements = state.movements;
+  const container = document.getElementById('progress-categories');
+  container.innerHTML = '';
+
+  // Sync top toggle buttons
+  document.querySelectorAll('#chart-mode-toggle .ct-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === state.chartMode);
+  });
+
+  // Group user's movements by category
+  const groups = { 'Upper Body': [], 'Lower Body': [], 'Added': [] };
+  movements.forEach(m => { groups[getMovCategory(m)].push(m); });
+
+  CATEGORY_ORDER.forEach(cat => {
+    const movs = groups[cat];
+    if (!movs.length) return;
+
+    // Default selection for this category
+    if (!state.progressMovSel[cat] || !movs.includes(state.progressMovSel[cat])) {
+      state.progressMovSel[cat] = movs[0];
+    }
+    const selectedMov = state.progressMovSel[cat];
+    const catId = cat.toLowerCase().replace(/ /g, '-');
+
+    const chipsHtml = movs.map(m => `
+      <div class="chip${m === selectedMov ? ' active' : ''}"
+           onclick="selectCategoryMov('${esc(cat)}','${esc(m)}')">${m}</div>
+    `).join('');
+
+    const section = document.createElement('div');
+    section.className = 'progress-cat-section';
+    section.id = `progress-cat-${catId}`;
+    section.innerHTML = `
+      <div class="progress-cat-header">
+        <span class="progress-cat-icon">${CATEGORY_ICONS[cat]}</span>
+        <span class="progress-cat-title">${cat}</span>
+      </div>
+      <div class="chips" id="chips-${catId}">${chipsHtml}</div>
+      <div class="chart-wrap" id="chartwrap-${catId}">
+        <canvas id="chart-${catId}" height="200"></canvas>
+      </div>
+      <div class="empty" id="nodata-${catId}" style="display:none">
+        <div class="ei">📊</div>
+        <p id="nodatamsg-${catId}"></p>
+      </div>`;
+    container.appendChild(section);
+
+    renderCategoryChart(cat, selectedMov);
+  });
+}
+
+function selectCategoryMov(cat, mov) {
+  state.progressMovSel[cat] = mov;
+  const catId = cat.toLowerCase().replace(/ /g, '-');
+  document.querySelectorAll(`#chips-${catId} .chip`).forEach(c => {
+    c.classList.toggle('active', c.textContent.trim() === mov);
+  });
+  renderCategoryChart(cat, mov);
+}
+
+function setChartMode(mode) {
+  state.chartMode = mode;
+  document.querySelectorAll('#chart-mode-toggle .ct-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  // Re-render all visible category charts with the new mode
+  const groups = { 'Upper Body': [], 'Lower Body': [], 'Added': [] };
+  state.movements.forEach(m => { groups[getMovCategory(m)].push(m); });
+  CATEGORY_ORDER.forEach(cat => {
+    if (!groups[cat].length) return;
+    const mov = state.progressMovSel[cat] || groups[cat][0];
+    renderCategoryChart(cat, mov);
+  });
+}
+
+function renderCategoryChart(cat, mov) {
+  const catId  = cat.toLowerCase().replace(/ /g, '-');
+  const canvasEl  = document.getElementById(`chart-${catId}`);
+  const chartWrap = document.getElementById(`chartwrap-${catId}`);
+  const noDataEl  = document.getElementById(`nodata-${catId}`);
+  const noDataMsg = document.getElementById(`nodatamsg-${catId}`);
+  if (!canvasEl || !chartWrap || !noDataEl) return;
+
+  const sessions = store.getSessions();
+  const points = [];
+  for (const s of sessions) {
+    const entry = (s.entries||[]).find(e => e.movement === mov);
+    if (!entry || !entry.sets.length) continue;
+    const validSets = entry.sets.filter(st => st.reps > 0);
+    if (!validSets.length) continue;
+    const avgReps = validSets.reduce((a,st) => a + (st.reps||0), 0) / validSets.length;
+    const maxWeight = Math.max(...validSets.map(st => st.weight||0));
+    const d = new Date(s.date);
+    points.push({
+      label: d.toLocaleDateString('en-US', { month:'short', day:'numeric' }),
+      weight: maxWeight,
+      reps: Math.round(avgReps * 10) / 10,
+    });
+  }
+
+  if (points.length < MIN_SESSIONS_FOR_CHART) {
+    const have = points.length;
+    const need = MIN_SESSIONS_FOR_CHART - have;
+    noDataMsg.textContent = have === 0
+      ? `Complete at least ${MIN_SESSIONS_FOR_CHART} workouts logging ${mov} to unlock this chart.`
+      : `${need} more workout${need !== 1 ? 's' : ''} with ${mov} needed. You've logged ${have} so far — keep going.`;
+    noDataEl.style.display  = 'block';
+    chartWrap.style.display = 'none';
+    return;
+  }
+  noDataEl.style.display  = 'none';
+  chartWrap.style.display = 'block';
+
+  const hasWeight = points.some(p => p.weight > 0);
+  const mode = (!hasWeight && state.chartMode !== 'reps') ? 'reps' : state.chartMode;
+  const showWeight = hasWeight && (mode === 'both' || mode === 'weight');
+  const showReps   = mode === 'both' || mode === 'reps';
+
+  const datasets = [];
+  if (showWeight) {
+    datasets.push({
+      label: 'Max Weight (lbs)', data: points.map(p => p.weight),
+      borderColor: '#e8ff00', backgroundColor: 'rgba(232,255,0,0.08)',
+      pointBackgroundColor: '#e8ff00', pointRadius: 4, tension: 0.35, fill: false, yAxisID: 'yW',
+    });
+  }
+  if (showReps) {
+    datasets.push({
+      label: 'Avg Reps', data: points.map(p => p.reps),
+      borderColor: '#00d4ff', backgroundColor: 'rgba(0,212,255,0.08)',
+      pointBackgroundColor: '#00d4ff', pointRadius: 4, tension: 0.35, fill: false, yAxisID: 'yR',
+    });
+  }
+
+  const scales = {
+    x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#777', font: { size: 11 } } }
+  };
+  if (showWeight) {
+    scales.yW = {
+      type: 'linear', position: 'left',
+      grid: { color: 'rgba(255,255,255,0.06)' },
+      ticks: { color: '#e8ff00', font: { size: 11 } },
+      title: { display: true, text: 'Weight (lbs)', color: '#e8ff00', font: { size: 11, weight:'700' } },
+    };
+  }
+  if (showReps) {
+    scales.yR = {
+      type: 'linear', position: showWeight ? 'right' : 'left',
+      grid: { color: showWeight ? 'rgba(0,0,0,0)' : 'rgba(255,255,255,0.06)' },
+      ticks: { color: '#00d4ff', font: { size: 11 } },
+      title: { display: true, text: 'Avg Reps', color: '#00d4ff', font: { size: 11, weight:'700' } },
+    };
+  }
+
+  if (state.progressCharts[cat]) { state.progressCharts[cat].destroy(); }
+  state.progressCharts[cat] = new Chart(canvasEl, {
+    type: 'line',
+    data: { labels: points.map(p => p.label), datasets },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { labels: { color: '#ccc', font: { size: 12 }, boxWidth: 14 } },
+        tooltip: { backgroundColor: '#1a1a1a', borderColor: '#333', borderWidth: 1, titleColor: '#aaa', bodyColor: '#fff' },
+      },
+      scales,
+    }
+  });
+}
+
+/* ══════════════════════════════════════════
+   MASTERY SCREEN
+══════════════════════════════════════════ */
+function renderMastery() {
+  const sessions = store.getSessions();
+  const unlocked = store.getUnlocked();
+  const movements = state.movements;
+
+  // Filter achievements to relevant ones for this user's movement set
+  const relevant = ACHIEVEMENTS.filter(a => {
+    if (!a.movement) return true;                        // session achievements always show
+    return movements.some(m => m.toLowerCase() === a.movement.toLowerCase());
+  });
+
+  // Group by category
+  const groups = {};
+  for (const a of relevant) {
+    if (!groups[a.cat]) groups[a.cat] = [];
+    groups[a.cat].push(a);
+  }
+
+  const el = document.getElementById('mastery-list');
+  let html = '';
+
+  for (const [cat, achs] of Object.entries(groups)) {
+    html += `<div class="mastery-group"><div class="mastery-group-title">${cat}</div>`;
+    for (const a of achs) {
+      const { current, pct, unlocked: done } = calcProgress(a, sessions);
+      const isUnlocked = unlocked.includes(a.id) || done;
+      const pctDisplay = Math.round(pct * 100);
+
+      let progressLabel = '';
+      if (a.type === 'total_sessions') progressLabel = `${current} / ${a.target} sessions`;
+      else if (a.type === 'max_weight_in_set') progressLabel = `Best: ${current} lbs / ${a.target} lbs`;
+      else if (a.type === 'all_sets_min_reps') progressLabel = `Best min-reps in a session: ${current} / ${a.target}`;
+      else if (a.type === 'total_reps_in_session') progressLabel = `Best session total: ${current} / ${a.target} reps`;
+      else if (a.type === 'min_sets_in_session') progressLabel = `Best sets in session: ${current} / ${a.target}`;
+      else progressLabel = `${current} / ${a.target}`;
+
+      html += `
+        <div class="ach-card ${isUnlocked ? 'unlocked' : ''}">
+          <div class="ach-top">
+            <div class="ach-icon">${a.icon}</div>
+            <div class="ach-info">
+              <div class="ach-name">${a.name}</div>
+              <div class="ach-desc">${a.desc}</div>
+            </div>
+            <div class="ach-badge ${isUnlocked ? 'done' : 'todo'}">${isUnlocked ? '✓ Done' : `${pctDisplay}%`}</div>
+          </div>
+          <div class="prog-track">
+            <div class="prog-fill ${isUnlocked ? 'done' : 'going'}" style="width:${pctDisplay}%"></div>
+          </div>
+          <div class="prog-meta">
+            <span>${progressLabel}</span>
+            ${isUnlocked ? `<span class="accent">Unlocked ✓</span>` : ''}
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  if (!html) {
+    html = `<div class="empty"><div class="ei">🏆</div><p>Set up your movements to see achievements.</p></div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+/* Check for newly unlocked achievements and persist them */
+function checkNewUnlocks() {
+  const sessions = store.getSessions();
+  const alreadyUnlocked = store.getUnlocked();
+  const newlyUnlocked = [];
+
+  const relevant = ACHIEVEMENTS.filter(a => {
+    if (!a.movement) return true;
+    return (state.movements||[]).some(m => m.toLowerCase() === (a.movement||'').toLowerCase());
+  });
+
+  for (const a of relevant) {
+    if (alreadyUnlocked.includes(a.id)) continue;
+    const { unlocked: done } = calcProgress(a, sessions);
+    if (done) {
+      store.unlock(a.id);
+      newlyUnlocked.push(a);
+    }
+  }
+  return newlyUnlocked;
+}
+
+/* ══════════════════════════════════════════
+   PRs SCREEN
+══════════════════════════════════════════ */
+const MOVEMENT_ICONS = {
+  'Pushup':'💪','Shoulder Press':'🎯','Row':'🚣','Squat':'🦵','Curl':'💪','Deadlift':'🏗'
+};
+
+function renderPRs() {
+  const sessions = store.getSessions();
+  const el = document.getElementById('prs-list');
+
+  if (!state.movements.length) {
+    el.innerHTML = `<div class="empty"><div class="ei">⭐</div><p>Set up your movements first.</p></div>`;
+    return;
+  }
+
+  const cards = state.movements.map(mov => {
+    let maxWeight = 0, maxReps = 0;
+    for (const s of sessions) {
+      const entry = (s.entries||[]).find(e => e.movement === mov);
+      if (!entry) continue;
+      for (const set of entry.sets) {
+        if ((set.weight||0) > maxWeight) maxWeight = set.weight;
+        if ((set.reps||0) > maxReps) maxReps = set.reps;
+      }
+    }
+    const icon = MOVEMENT_ICONS[mov] || '🏋️';
+    const weightDisplay = maxWeight > 0 ? `${maxWeight}` : '—';
+    const repsDisplay   = maxReps   > 0 ? `${maxReps}`  : '—';
+
+    return `
+      <div class="pr-card">
+        <div class="pr-icon">${icon}</div>
+        <div class="pr-name">${mov}</div>
+        <div class="pr-stats">
+          <div class="pr-stat pr-weight">
+            <div class="pr-lbl">Max lbs</div>
+            <div class="pr-val">${weightDisplay}</div>
+          </div>
+          <div class="pr-sep"></div>
+          <div class="pr-stat pr-reps">
+            <div class="pr-lbl">Max reps</div>
+            <div class="pr-val">${repsDisplay}</div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  el.innerHTML = `<div class="pr-grid">${cards}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+let _toastTimer;
+function showToast(msg, isAch = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isAch ? ' ach' : '');
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => { el.className = 'toast'; }, 3000);
+}
+
+/* ══════════════════════════════════════════
+   ABANDON SESSION
+══════════════════════════════════════════ */
+function abandonSession() {
+  const confirmed = confirm(
+    'End this session?\n\n' +
+    'This session will NOT be saved to your History, Progress charts, or Milestones. ' +
+    'Any sets logged so far will be lost.'
+  );
+
+  if (confirmed) {
+    clearInterval(state.timer.interval);
+    state.timer = { remaining: 1200, running: false, interval: null };
+    state.movements.forEach(m => { state.workout[m] = []; });
+    navTo('workout');
+    showToast('Session cleared.');
+  }
+}
+
+/* ══════════════════════════════════════════
+   CHANGE MOVEMENTS
+══════════════════════════════════════════ */
+function changeMovements() {
+  state.changingMovements = true;
+
+  // Pre-fill inputs with current movements
+  document.getElementById('setup-back-bar').style.display = 'block';
+  document.getElementById('setup-sub-text').textContent = 'Choose new movements. Your workout history will be preserved.';
+  document.getElementById('setup-save-btn').textContent = 'Save Changes';
+
+  // Detect if current movements match the preset list (first 6)
+  const current = state.movements;
+  const matchesPreset = PRESET_MOVEMENTS.every((p, i) => p === current[i]);
+  state.movChoice = matchesPreset ? 'preset' : 'custom';
+  document.getElementById('choice-preset').classList.toggle('selected', state.movChoice === 'preset');
+  document.getElementById('choice-custom').classList.toggle('selected', state.movChoice === 'custom');
+
+  renderMovementInputs();
+
+  // After rendering, fill in current values
+  if (state.movChoice === 'preset') {
+    const el = document.getElementById('custom-7th');
+    if (el) el.value = current[6] || '';
+  } else {
+    current.forEach((m, i) => {
+      const el = document.getElementById(`custom-mov-${i}`);
+      if (el) el.value = m;
+    });
+  }
+
+  document.getElementById('nav').style.display = 'none';
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-setup').classList.add('active');
+}
+
+function cancelChangeMovements() {
+  state.changingMovements = false;
+  resetSetupUI();
+  document.getElementById('nav').style.display = 'flex';
+  navTo('prs');
+}
+
+function resetSetupUI() {
+  document.getElementById('setup-back-bar').style.display = 'none';
+  document.getElementById('setup-sub-text').textContent = '20 minutes. 7 movements.\nTrack every rep, every set.';
+  document.getElementById('setup-save-btn').textContent = 'Save & Start Training';
+}
+
+/* ══════════════════════════════════════════
+   RESET
+══════════════════════════════════════════ */
+function confirmReset() {
+  if (confirm('Reset all Build20 data? This cannot be undone.')) {
+    store.clearAll();
+    // Destroy any live charts before clearing state
+    Object.values(state.progressCharts||{}).forEach(c => { try { c.destroy(); } catch(e){} });
+    Object.assign(state, {
+      screen:'setup', movChoice:'preset', movements:[],
+      workout:{}, timer:{remaining:1200,running:false,interval:null},
+      progressMovSel:{}, progressCharts:{}, chartMode:'both',
+      changingMovements: false,
+    });
+    resetSetupUI();
+    document.getElementById('nav').style.display = 'none';
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-setup').classList.add('active');
+    renderMovementInputs();
+  }
+}
+
+/* ══════════════════════════════════════════
+   INIT
+══════════════════════════════════════════ */
+(function init() {
+  renderMovementInputs();
+  const saved = store.getMovements();
+  if (saved && saved.length === 7) {
+    launchApp();
+  }
+})();
+</script>
+</body>
+</html>
