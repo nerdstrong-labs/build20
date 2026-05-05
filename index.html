@@ -142,7 +142,13 @@
     /* ════════════════════════════════
        WORKOUT SCREEN
     ════════════════════════════════ */
-    .timer-block { text-align: center; margin-bottom: 24px; }
+    .timer-block {
+      text-align: center; margin-bottom: 24px;
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg);
+      padding: 12px 0 10px;
+      border-bottom: 1px solid var(--border);
+    }
     .timer-time {
       font-size: 72px; font-weight: 900; letter-spacing: -0.04em;
       font-variant-numeric: tabular-nums; line-height: 1;
